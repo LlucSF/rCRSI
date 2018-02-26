@@ -7,13 +7,11 @@
 DataInput.txt(numBands = 1)
 }
 \arguments{
-\item{PathtoFile}{full path to .txt file.
-
-Reads a .txt file containing Raman data from Reinshaw devices and convert it to an RamanR data object.}
+\item{PathtoFile}{full path to .txt file.}
 }
 \value{
-a RamanR data object.
+a RmnObj data object.
 }
 \description{
-DataInput.txt
+Reads a .txt file containing Raman data from Reinshaw devices and convert it to an RamanR data object.
 }

@@ -16,9 +16,6 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-
-
-
 AverageSpectrum <- function(numBands, numPixels, RmnObj)
 {
   for (i in 1:numBands)
@@ -28,6 +25,15 @@ AverageSpectrum <- function(numBands, numPixels, RmnObj)
       RmnObj$AvrgSpectr[,i] = RmnObj$AvrgSpectr[,i] + RmnObj$Data[,(j+(numPixels*(i-1)))]
     }
     RmnObj$AvrgSpectr[,i]  = RmnObj$AvrgSpectr[,i] / numPixels
+  }
+
+  for (i in 1:numBands)
+  {
+    g <- ggplot2::qplot(y = RmnObj$AvrgSpectr[,i], x = RmnObj$RamanShiftAxis[,i],
+                        ylim = c(min(RmnObj$AvrgSpectr[,i]), max(RmnObj$AvrgSpectr[,i])),
+                        main = "Average Spectrum",geom ="line",
+                        xlab = "Raman Shift (WaveNum/cm)",ylab = "Counts",color="red")
+    print(g)
   }
 
   return(RmnObj$AvrgSpectr)

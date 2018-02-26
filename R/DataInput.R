@@ -20,9 +20,9 @@
 #'
 #' @param PathtoFile full path to .txt file.
 #'
-#' Reads a .txt file containing Raman data from Reinshaw devices and convert it to an RamanR data object.
+#' @description Reads a .txt file containing Raman data from Reinshaw devices and convert it to an RamanR data object.
 #'
-#' @return a RamanR data object.
+#' @return a RmnObj data object.
 #' @export
 #'
 
@@ -81,13 +81,6 @@ DataInput.txt <- function(numBands = 1)
   return(rCRMIObj(RamanData, numPixels, numBands, RamanShift, BandLength,Coords))
 }
 
-#' rCRMIObj
-#'
-#' Creates a rCRMI object .
-#'
-#' @return a blank rCRMI data object.
-#'
-#'
 
 rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght, Coords)
 {
@@ -100,6 +93,11 @@ rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght
   RmnObj$AbsCoords    <- Coords
   RmnObj$RelCoords    <- list(trunc(Coords[[1]]-min(Coords[[1]])),trunc(Coords[[2]]-min(Coords[[2]])))
   RmnObj$Data         <- RamanData
+
+  ID <- gsub(x = as.character(Sys.time()),pattern = ("-"),replacement = "")
+  ID <- gsub(x = ID,pattern = (":"),replacement = "")
+  ID <- gsub(x = ID,pattern = (" "),replacement = "")
+  RmnObj$ID           <- ID
 
   if (numBands == 1 & BandsLenght > 391)
     {
@@ -118,17 +116,6 @@ rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght
     }
   }
   RmnObj$AvrgSpectr  <- AverageSpectrum(numBands, numPixels, RmnObj)
-
-  for (i in 1:numBands)
-  {
-  g <- ggplot2::qplot(y = RmnObj$AvrgSpectr[,i], x = RmnObj$RamanShiftAxis[,i],
-                      ylim = c(min(RmnObj$AvrgSpectr[,i]), max(RmnObj$AvrgSpectr[,i])),
-                      main = "Average Spectrum",geom ="line",
-                      xlab = "Raman Shift (WaveNum/cm)",ylab = "Counts",color="red")
-  print(g)
-  }
-
-
   return (RmnObj)
 }
 
