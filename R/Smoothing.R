@@ -1,5 +1,5 @@
 #########################################################################
-#     rCRMI - R package for Confocal Raman Spectroscopy Imaging RmnObj processing and visualization
+#     rCRSI - R package for Confocal Raman Spectroscopy Imaging rCRSIObj processing and visualization
 #     Copyright (C) 2018 Lluc Sementé Fernàndez
 #
 #     This program is free software: you can redistribute it and/or modify
@@ -18,36 +18,34 @@
 
 #' SmoothSpectra
 #'
-#' @param RmnObj a RmnObj.
-#' @param ZroThreshold  Boolean. Apply negative-to-zero thresholding during the wavelets preprocessing.
+#' @param rCRSIObj a rCRSIObj.
+#' @param NtoZ  Boolean. Apply negative-to-zero thresholding during the wavelets preprocessing.
 #' @param BackgroundSubs Boolean. Apply background substraction using a low frequency filter wavelets processing.
+#' @param window Integer. Number of added points at the begining and ending of the signal to reduce artifacts from the wavelets transform.
 #'
-#' @description  Smooths the data contained in a RmnObj using the discrete wavelets transform (DWT).
+#' @description  Smooths the data contained in a rCRSIObj using the discrete wavelets transform (DWT).
 #'
-#' @return a RmnObj object.
+#' @return a rCRSIObj object.
 #' @export
 #'
 
-SmoothSpectra <- function(RmnObj, ZroThreshold = TRUE,
-                             BackgroundSubs = TRUE,window = 32, ...)
+SmoothSpectra <- function(rCRSIObj, NtoZ = TRUE,
+                             BackgroundSubs = TRUE,window = 32)
 {
 
   writeLines("Starting wavelets processing...")
   start_time <- Sys.time()
-  #window <-32
-  #RmnObj <- RmnObj
 
-  for(a in 1:RmnObj$numBands)
+  for(a in 1:rCRSIObj$numBands)
   {
-    for(b in 1:RmnObj$numPixels)
+    for(b in 1:rCRSIObj$numPixels)
     {
-      spectrum <- c(rep(x = RmnObj$Data[1,(b+((a-1)*RmnObj$BandsLength))],times = window),
-                    RmnObj$Data[,(b+((a-1)*RmnObj$BandsLength))],
-                    rep(x = RmnObj$Data[RmnObj$BandsLength,(b+((a-1)*RmnObj$BandsLength))],times = window))
+      spectrum <- c(rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),1],times = window),
+                    rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),],
+                    rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),rCRSIObj$BandsLength],times = window))
 
       Wav_c <- wavelets::modwt(X = spectrum, n.levels = 4, filter = "d4",
                                boundary = "periodic", fast = TRUE)
-
       W<-Wav_c@W
       W$W1<-W$W1-W$W1
       W$W2<-W$W2-W$W2
@@ -55,62 +53,60 @@ SmoothSpectra <- function(RmnObj, ZroThreshold = TRUE,
       W$W4<-W$W4-W$W4
       Wav_c@W<-W
 
-      RmnObj$Data[,b+(a-1)*RmnObj$BandsLength]<-imodwt(Wav_c)[(window+1):(window+RmnObj$BandsLength)]
+      rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,]<-wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
 
-      if (BackgroundSubs == TRUE)
+      if (BackgroundSubs)
       {
-      spectrum <- c(rep(x = RmnObj$Data[1,(b+((a-1)*RmnObj$BandsLength))],times = window),
-                    RmnObj$Data[,(b+((a-1)*RmnObj$BandsLength))],
-                    rep(x = RmnObj$Data[RmnObj$BandsLength,(b+((a-1)*RmnObj$BandsLength))],times = window))
+        spectrum <- c(rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),1],times = window),
+                      rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),],
+                      rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),rCRSIObj$BandsLength],times = window))
 
-      Wav_c <- wavelets::modwt(X = spectrum, n.levels=7, filter="d6",
-                               boundary="periodic", fast=TRUE)
+        Wav_c <- wavelets::modwt(X = spectrum, n.levels=7, filter="d6",
+                                 boundary="periodic", fast=TRUE)
+        W<-Wav_c@W
+        W$W7<-W$W7-W$W7
+        Wav_c@W<-W
+        V<-Wav_c@V
 
-      W<-Wav_c@W
-      W$W7<-W$W7-W$W7
-      Wav_c@W<-W
-      V<-Wav_c@V
+        V$V1[,1]<-V$V1[,1]-V$V1[,1]
+        V$V2[,1]<-V$V2[,1]-V$V2[,1]
+        V$V3[,1]<-V$V3[,1]-V$V3[,1]
+        V$V4[,1]<-V$V4[,1]-V$V4[,1]
+        V$V5[,1]<-V$V5[,1]-V$V5[,1]
+        V$V6[,1]<-V$V6[,1]-V$V6[,1]
+        V$V7[,1]<-V$V7[,1]-V$V7[,1]
+        Wav_c@V<-V
 
-      V$V1[,1]<-V$V1[,1]-V$V1[,1]
-      V$V2[,1]<-V$V2[,1]-V$V2[,1]
-      V$V3[,1]<-V$V3[,1]-V$V3[,1]
-      V$V4[,1]<-V$V4[,1]-V$V4[,1]
-      V$V5[,1]<-V$V5[,1]-V$V5[,1]
-      V$V6[,1]<-V$V6[,1]-V$V6[,1]
-      V$V7[,1]<-V$V7[,1]-V$V7[,1]
-      Wav_c@V<-V
-
-      RmnObj$Data[,b+(a-1)*RmnObj$BandsLength]<-imodwt(Wav_c)[(window+1):(window+RmnObj$BandsLength)]
+        rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,] <- wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
       }
-
     }
   }
 
-  if (ZroThreshold == TRUE)
+  if (NtoZ)
   {
-    for(i in 1:RmnObj$numBands)
+    for(i in 1:rCRSIObj$numBands)
     {
-      for(j in 1:RmnObj$numPixels)
+      for(j in 1:rCRSIObj$numPixels)
       {
-        for(k in 1:RmnObj$BandsLength)
+        for(k in 1:rCRSIObj$BandsLength)
         {
-          if((RmnObj$Data[k,j+(i-1)*RmnObj$BandsLength])<0)
+          if((rCRSIObj$Data[j+(i-1)*rCRSIObj$numPixels,k])<0)
           {
-            RmnObj$Data[k,j+(i-1)*RmnObj$BandsLength] <- 0L
-            RmnObj$Data[k,j+(i-1)*RmnObj$BandsLength]
+            rCRSIObj$Data[j+(i-1)*rCRSIObj$numPixels,k] <- 0L
           }
         }
       }
     }
   }
 
-  RmnObj$AvrgSpectr <- rCRMI:::AverageSpectrum(RmnObj$numBands,RmnObj$numPixels,RmnObj)
+  rCRSIObj$ProAvrgSpectr <- 1
+  rCRSIObj$ProAvrgSpectr <- AverageSpectrum(rCRSIObj$numBands,rCRSIObj$numPixels,rCRSIObj)
 
   end_time <- Sys.time()
   execution_time <- end_time - start_time
   print(execution_time)
   writeLines("Processing complete...")
 
-  return (RmnObj)
+  return (rCRSIObj)
 }
 

@@ -4,18 +4,21 @@
 \alias{SmoothSpectra}
 \title{SmoothSpectra}
 \usage{
-SmoothSpectra(RmnObj, ZroThreshold = TRUE, BackgroundSubs = TRUE, ...)
+SmoothSpectra(rCRSIObj, NtoZ = TRUE, BackgroundSubs = TRUE,
+  window = 32)
 }
 \arguments{
-\item{RmnObj}{a RmnObj.}
+\item{rCRSIObj}{a rCRSIObj.}
 
-\item{ZroThreshold}{Boolean. Apply negative-to-zero thresholding during the wavelets preprocessing.}
+\item{NtoZ}{Boolean. Apply negative-to-zero thresholding during the wavelets preprocessing.}
 
 \item{BackgroundSubs}{Boolean. Apply background substraction using a low frequency filter wavelets processing.}
+
+\item{window}{Integer. Number of added points at the begining and ending of the signal to reduce artifacts from the wavelets transform.}
 }
 \value{
-a RmnObj object.
+a rCRSIObj object.
 }
 \description{
-Smooths the data contained in a RmnObj using the discrete wavelets transform (DWT).
+Smooths the data contained in a rCRSIObj using the discrete wavelets transform (DWT).
 }

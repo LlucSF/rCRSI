@@ -4,13 +4,15 @@
 \alias{DataInput.txt}
 \title{DataInput.txt}
 \usage{
-DataInput.txt(numBands = 1)
+DataInput.txt(path = NULL, numBands = 1)
 }
 \arguments{
-\item{PathtoFile}{full path to .txt file.}
+\item{path}{full path to .txt file.}
+
+\item{numBands}{Number of .txt files to process.}
 }
 \value{
-a RmnObj data object.
+a rCRSIObj data object.
 }
 \description{
 Reads a .txt file containing Raman data from Reinshaw devices and convert it to an RamanR data object.

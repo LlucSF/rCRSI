@@ -18,15 +18,16 @@
 
 #' DataInput.txt
 #'
-#' @param PathtoFile full path to .txt file.
+#' @param path full path to .txt file.
+#' @param numBands Number of .txt files to process.
 #'
 #' @description Reads a .txt file containing Raman data from Reinshaw devices and convert it to an RamanR data object.
 #'
-#' @return a RmnObj data object.
+#' @return a rCRSIObj data object.
 #' @export
 #'
 
-DataInput.txt <- function(numBands = 1)
+DataInput.txt <- function(path = NULL, numBands = 1)
 {
   writeLines("Select files...")
 
@@ -34,13 +35,22 @@ DataInput.txt <- function(numBands = 1)
   PathToFile <- list()
   for(i in 1:(numBands))
   {
-    PathToFile[[i]]<-file.choose()
+    if(is.null(path))
+      {
+        PathToFile[[i]] <- file.choose()
+      }else
+        {
+          PathToFile[[i]] <- path[i]
+        }
   }
+
+
+  writeLines("Starting the data structuring process...")
 
   rawData <- list()
   for(i in 1:(numBands))
   {
-    tmp <- read.table(file = PathToFile[[i]],header = FALSE)
+    tmp <- utils::read.table(file = PathToFile[[i]],header = FALSE)
     if(i==1)
     {
       rawData <- tmp
@@ -49,7 +59,6 @@ DataInput.txt <- function(numBands = 1)
        rawData <- cbind(rawData,tmp[,3:4])
      }
   }
-  writeLines("Starting the data structuring process...")
 
   #Raman Shift Axis, number of spectra & Raman band length
   RamanShift <- array(dim = c(length(union(rawData[[3]],rawData[[3]])),numBands))
@@ -61,71 +70,62 @@ DataInput.txt <- function(numBands = 1)
   BandLength <- (length(RamanShift)/numBands)
 
   #Coordenates
-  Y <- union(rawData[[1]],rawData[[1]])
-  X <- union(rawData[[2]],rawData[[2]])
+  X <- union(rawData[[1]],rawData[[1]])
+  Y <- union(rawData[[2]],rawData[[2]])
   numPixels <- length(X)*length(Y)
-  Coords <- list(X,Y)
+  Coords <- list(X = X, Y = Y)
 
   #Data Shaping
-  RamanData <- array(dim=c(BandLength,numBands*numPixels))
+  RamanData <- array(dim=c(numBands*numPixels,BandLength))
   for(i in 1:numBands)
   {
     p <- 2*i+2
     for(j in 1:numPixels)
     {
-      RamanData[,j+numPixels*(i-1)] <- rawData[[p]][((j-1)*BandLength+1):(j*BandLength)]
+      RamanData[j+numPixels*(i-1),] <- rawData[[p]][((j-1)*BandLength+1):(j*BandLength)]
     }
   }
 
   writeLines("Data structuring complete...")
-  return(rCRMIObj(RamanData, numPixels, numBands, RamanShift, BandLength,Coords))
+  return(rCRMIObj(RamanData, numPixels, numBands, RamanShift, BandLength, Coords))
 }
 
 
 rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght, Coords)
 {
-  RmnObj <- list()
+  rCRSIObj <- list()
 
-  RmnObj$numPixels    <- numPixels
-  RmnObj$numBands     <- numBands
-  RmnObj$numSpectr    <- numPixels*numBands
-  RmnObj$BandsLength  <- BandsLenght
-  RmnObj$AbsCoords    <- Coords
-  RmnObj$RelCoords    <- list(trunc(Coords[[1]]-min(Coords[[1]])),trunc(Coords[[2]]-min(Coords[[2]])))
-  RmnObj$Data         <- RamanData
+  rCRSIObj$numPixels    <- numPixels
+  rCRSIObj$numBands     <- numBands
+  rCRSIObj$numSpectr    <- numPixels*numBands
+  rCRSIObj$BandsLength  <- BandsLenght
+  rCRSIObj$AbsCoords    <- Coords
+  rCRSIObj$RelCoords    <- list(X = 1:length(Coords$X), Y = 1:length(Coords$Y))
+  rCRSIObj$PixelSize    <- c(Coords$X[2]-Coords$X[1], Coords$Y[2]-Coords$Y[1])
+  rCRSIObj$Data         <- RamanData
 
-  ID <- gsub(x = as.character(Sys.time()),pattern = ("-"),replacement = "")
-  ID <- gsub(x = ID,pattern = (":"),replacement = "")
-  ID <- gsub(x = ID,pattern = (" "),replacement = "")
-  RmnObj$ID           <- ID
+  # ID <- gsub(x = as.character(Sys.time()),pattern = ("-"),replacement = "")
+  # ID <- gsub(x = ID,pattern = (":"),replacement = "")
+  # ID <- gsub(x = ID,pattern = (" "),replacement = "")
+  # rCRSIObj$ID           <- ID
+  #
+  # if (numBands == 1 & BandsLenght > 391)
+  #   {
+  #   rCRSIObj$FullSpect <- TRUE
+  #   }
+  #    else   rCRSIObj$FullSpect <- FALSE
 
-  if (numBands == 1 & BandsLenght > 391)
-    {
-    RmnObj$FullSpect <- TRUE
-    }
-    else   RmnObj$FullSpect <- FALSE
-
-  RmnObj$RamanShiftAxis <- RamanShift
-  RmnObj$AvrgSpectr      <- RamanShift
+  rCRSIObj$RamanShiftAxis <- RamanShift
+  rCRSIObj$AvrgSpectr     <- RamanShift
 
   for (i in 1:numBands)
   {
     for (j in 1:numPixels)
     {
-      RmnObj$AvrgSpectr[,i] <- 0
+      rCRSIObj$AvrgSpectr[,i] <- 0
     }
   }
-  RmnObj$AvrgSpectr  <- AverageSpectrum(numBands, numPixels, RmnObj)
-  return (RmnObj)
+  rCRSIObj$AvrgSpectr  <- AverageSpectrum(numBands, numPixels, rCRSIObj)
+  return (rCRSIObj)
 }
-
-
-
-
-
-
-
-
-
-
 
