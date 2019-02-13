@@ -16,10 +16,10 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-#' PlotAUCImage
+#' PlotScanImage
 #'
 #' @param rCRSIObj A rCRSI object.
-#' @param intervals Vector containing pairs of indexes that define the area under one or more peaks. (Length must be numImg*2)
+#' @param wavelength Vector containing pairs of indexes that define the area under one or more peaks. (Length must be numImg*2)
 #' @param numImg  Number of images to be plotted.
 #'
 #'
@@ -28,39 +28,19 @@
 #' @export
 #'
 
-PlotAUCImage <- function(rCRSIObj, intervals, numImg = 1, interpolate = T)
+PlotScanImage <- function(rCRSIObj, wavelength, numImg = 1, interpolate = T)
 {
-  for(i in 1:numImg)
-  {
-    if(intervals[2*i-1] > intervals[2*i])
-    {
-      stop("Error: In intervals imput the lower value first")
-    }
-  }
 
-  if(length(intervals) != numImg*2)
+  if(length(wavelength) != numImg)
   {
-    stop("Error: Not enough intervals for the number images desired")
+    stop("Error: Not enough wavelength for the number of images desired")
   }
 
   for (i in 1:numImg)
   {
-    from <- which.min(abs(rCRSIObj$RamanShiftAxis-intervals[2*i-1]))
-    to   <- which.min(abs(rCRSIObj$RamanShiftAxis-intervals[2*i]))
-
-    AUCvec <- rep(0, times = rCRSIObj$numPixels)
-
-    for(i in 1:rCRSIObj$numPixels)
-    {
-      AUCvec[i] <- flux::auc(x = rCRSIObj$RamanShiftAxis[from:to],
-                             y = rCRSIObj$Data[i,from:to]
-      )
-    }
-
-    AUCimg <- matrix(data = AUCvec,
+    AUCimg <- matrix(data = rCRSIObj$Data[,which.min(abs(rCRSIObj$RamanShiftAxis-wavelength))],
                      nrow = length(rCRSIObj$RelCoords$X),
                      ncol = length(rCRSIObj$RelCoords$Y))
-
 
     #Create the raster
     img <- raster::raster(nrows = nrow(AUCimg),
@@ -69,19 +49,19 @@ PlotAUCImage <- function(rCRSIObj, intervals, numImg = 1, interpolate = T)
                           xmx = ncol(AUCimg),
                           ymn = 0,
                           ymx = nrow(AUCimg)
-                          )
+    )
 
     img <- raster::setValues(img,AUCimg)
 
     raster::plot(x = img,
                  col = sp::bpy.colors(64),
                  useRaster = T,
-                 interpolate = interpolate
-                 )
+                 interpolate = interpolate,colNA = "black"
+    )
 
-    graphics::title(main = paste("AUC: ",signif(rCRSIObj$RamanShiftAxis[from],5),"~",signif(rCRSIObj$RamanShiftAxis[to],5)),
-          sub = paste("Pixel size: ", signif(rCRSIObj$PixelSize[1],3)," x ",signif(rCRSIObj$PixelSize[2],3)),
-          line = 2
-          )
+    graphics::title(main = paste("Wavelength: ",signif(rCRSIObj$RamanShiftAxis[which.min(abs(rCRSIObj$RamanShiftAxis-wavelength))],7)),
+                    sub = paste("Pixel size: ", signif(rCRSIObj$PixelSize[1],3)," x ",signif(rCRSIObj$PixelSize[2],3)),
+                    line = 2
+    )
   }
 }

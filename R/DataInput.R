@@ -27,7 +27,7 @@
 #' @export
 #'
 
-DataInput.txt <- function(path = NULL, numBands = 1)
+DataInput.txt <- function(path = NULL, numBands = 1, IntensityThreshold = T)
 {
   writeLines("Select files...")
 
@@ -86,12 +86,11 @@ DataInput.txt <- function(path = NULL, numBands = 1)
     }
   }
 
-  writeLines("Data structuring complete...")
-  return(rCRMIObj(RamanData, numPixels, numBands, RamanShift, BandLength, Coords))
+  return(rCRMIObj(RamanData, numPixels, numBands, RamanShift, BandLength, Coords, IntensityThreshold))
 }
 
 
-rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght, Coords)
+rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght, Coords, IntensityThreshold)
 {
   rCRSIObj <- list()
 
@@ -103,18 +102,6 @@ rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght
   rCRSIObj$RelCoords    <- list(X = 1:length(Coords$X), Y = 1:length(Coords$Y))
   rCRSIObj$PixelSize    <- c(Coords$X[2]-Coords$X[1], Coords$Y[2]-Coords$Y[1])
   rCRSIObj$Data         <- RamanData
-
-  # ID <- gsub(x = as.character(Sys.time()),pattern = ("-"),replacement = "")
-  # ID <- gsub(x = ID,pattern = (":"),replacement = "")
-  # ID <- gsub(x = ID,pattern = (" "),replacement = "")
-  # rCRSIObj$ID           <- ID
-  #
-  # if (numBands == 1 & BandsLenght > 391)
-  #   {
-  #   rCRSIObj$FullSpect <- TRUE
-  #   }
-  #    else   rCRSIObj$FullSpect <- FALSE
-
   rCRSIObj$RamanShiftAxis <- RamanShift
   rCRSIObj$AvrgSpectr     <- RamanShift
 
@@ -125,7 +112,28 @@ rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght
       rCRSIObj$AvrgSpectr[,i] <- 0
     }
   }
+
+
   rCRSIObj$AvrgSpectr  <- AverageSpectrum(numBands, numPixels, rCRSIObj)
+
+  if(IntensityThreshold)
+  {
+    dens <- density(rCRSIObj$Data)
+    aucvec <- vector(length = (length(dens$x)-1))
+    for(i in 2:length(dens$x))
+    {
+      aucvec[i-1] <- flux::auc(x = dens$x[1:i], y = dens$y[1:i])
+    }
+
+    intThr <- dens$x[which(aucvec>0.99*max(aucvec))[1]]
+
+    for(i in 1:rCRSIObj$BandsLength)
+    {
+      rCRSIObj$Data[which(rCRSIObj$Data[,i]>intThr),i] <- median(rCRSIObj$Data[,i])
+    }
+  }
+
+  writeLines("Data structuring complete...")
   return (rCRSIObj)
 }
 
