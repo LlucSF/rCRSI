@@ -1,2 +1,2 @@
-# rCRMI
+# rCRSI
 Visualitzation and processing toolbox for Confocal Raman Spectroscopy Imaging
