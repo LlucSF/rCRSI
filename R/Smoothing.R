@@ -19,6 +19,7 @@
 #' SmoothSpectra
 #'
 #' @param rCRSIObj a rCRSIObj.
+#' @param OddfiltLength Integer. Length of the Savitzky-Golay filter.
 #' @param NtoZ  Boolean. Apply negative-to-zero thresholding during the wavelets preprocessing.
 #' @param BackgroundSubs Boolean. Apply background substraction using a low frequency filter wavelets processing.
 #' @param window Integer. Number of added points at the begining and ending of the signal to reduce artifacts from the wavelets transform.
@@ -29,78 +30,99 @@
 #' @export
 #'
 
-SmoothSpectra <- function(rCRSIObj, NtoZ = TRUE,
-                             BackgroundSubs = TRUE,window = 32)
+SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
+                          NtoZ = TRUE,
+                          BackgroundSubs = TRUE, window = 32
+                          )
 {
 
-  writeLines("Starting wavelets processing...")
+  if(method!="normal" & method!="wavelets")
+  {
+    stop("Method must be 'normal' or 'wavelets'")
+  }
+
+  writeLines("Starting processing...")
   start_time <- Sys.time()
 
-  for(a in 1:rCRSIObj$numBands)
+  if(method=="wavelets")
   {
-    for(b in 1:rCRSIObj$numPixels)
+    for(a in 1:rCRSIObj$numBands)
     {
-      spectrum <- c(rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),1],times = window),
-                    rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),],
-                    rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),rCRSIObj$BandsLength],times = window))
-
-      Wav_c <- wavelets::modwt(X = spectrum, n.levels = 4, filter = "d4",
-                               boundary = "periodic", fast = TRUE)
-      W<-Wav_c@W
-      W$W1<-W$W1-W$W1
-      W$W2<-W$W2-W$W2
-      W$W3<-W$W3-W$W3
-      W$W4<-W$W4-W$W4
-      Wav_c@W<-W
-
-      rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,]<-wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
-
-      if (BackgroundSubs)
+      for(b in 1:rCRSIObj$numPixels)
       {
         spectrum <- c(rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),1],times = window),
                       rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),],
                       rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),rCRSIObj$BandsLength],times = window))
 
-        Wav_c <- wavelets::modwt(X = spectrum, n.levels=7, filter="d6",
-                                 boundary="periodic", fast=TRUE)
+        Wav_c <- wavelets::modwt(X = spectrum, n.levels = 4, filter = "d4",
+                                 boundary = "periodic", fast = TRUE)
         W<-Wav_c@W
-        W$W7<-W$W7-W$W7
+        W$W1<-W$W1-W$W1
+        W$W2<-W$W2-W$W2
+        W$W3<-W$W3-W$W3
+        W$W4<-W$W4-W$W4
         Wav_c@W<-W
-        V<-Wav_c@V
 
-        V$V1[,1]<-V$V1[,1]-V$V1[,1]
-        V$V2[,1]<-V$V2[,1]-V$V2[,1]
-        V$V3[,1]<-V$V3[,1]-V$V3[,1]
-        V$V4[,1]<-V$V4[,1]-V$V4[,1]
-        V$V5[,1]<-V$V5[,1]-V$V5[,1]
-        V$V6[,1]<-V$V6[,1]-V$V6[,1]
-        V$V7[,1]<-V$V7[,1]-V$V7[,1]
-        Wav_c@V<-V
+        rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,]<-wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
 
-        rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,] <- wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
+        if (BackgroundSubs)
+        {
+          spectrum <- c(rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),1],times = window),
+                        rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),],
+                        rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),rCRSIObj$BandsLength],times = window))
+
+          Wav_c <- wavelets::modwt(X = spectrum, n.levels=7, filter="d6",
+                                   boundary="periodic", fast=TRUE)
+          W<-Wav_c@W
+          W$W7<-W$W7-W$W7
+          Wav_c@W<-W
+          V<-Wav_c@V
+
+          V$V1[,1]<-V$V1[,1]-V$V1[,1]
+          V$V2[,1]<-V$V2[,1]-V$V2[,1]
+          V$V3[,1]<-V$V3[,1]-V$V3[,1]
+          V$V4[,1]<-V$V4[,1]-V$V4[,1]
+          V$V5[,1]<-V$V5[,1]-V$V5[,1]
+          V$V6[,1]<-V$V6[,1]-V$V6[,1]
+          V$V7[,1]<-V$V7[,1]-V$V7[,1]
+          Wav_c@V<-V
+
+          rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,] <- wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
+        }
       }
     }
-  }
 
-  if (NtoZ)
-  {
-    for(i in 1:rCRSIObj$numBands)
+    if (NtoZ)
     {
-      for(j in 1:rCRSIObj$numPixels)
+      for(i in 1:rCRSIObj$numBands)
       {
-        for(k in 1:rCRSIObj$BandsLength)
+        for(j in 1:rCRSIObj$numPixels)
         {
-          if((rCRSIObj$Data[j+(i-1)*rCRSIObj$numPixels,k])<0)
+          for(k in 1:rCRSIObj$BandsLength)
           {
-            rCRSIObj$Data[j+(i-1)*rCRSIObj$numPixels,k] <- 0L
+            if((rCRSIObj$Data[j+(i-1)*rCRSIObj$numPixels,k])<0)
+            {
+              rCRSIObj$Data[j+(i-1)*rCRSIObj$numPixels,k] <- 0L
+            }
           }
         }
       }
     }
+
+    rCRSIObj$ProAvrgSpectr <- 1
+    rCRSIObj$ProAvrgSpectr <- AverageSpectrum(rCRSIObj$numBands,rCRSIObj$numPixels,rCRSIObj)
   }
 
-  rCRSIObj$ProAvrgSpectr <- 1
-  rCRSIObj$ProAvrgSpectr <- AverageSpectrum(rCRSIObj$numBands,rCRSIObj$numPixels,rCRSIObj)
+  if(method=="normal")
+  {
+    for(i in 1:rCRSIObj$numSpectr)
+    {
+      rCRSIObj$Data[i,] <- signal::sgolayfilt(x = rCRSIObj$Data[i,],p = 2,n = OddfiltLength)
+    }
+
+    rCRSIObj$ProAvrgSpectr <- 1
+    rCRSIObj$ProAvrgSpectr <- AverageSpectrum(rCRSIObj$numBands,rCRSIObj$numPixels,rCRSIObj)
+  }
 
   end_time <- Sys.time()
   execution_time <- end_time - start_time

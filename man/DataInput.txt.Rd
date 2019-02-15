@@ -4,12 +4,17 @@
 \alias{DataInput.txt}
 \title{DataInput.txt}
 \usage{
-DataInput.txt(path = NULL, numBands = 1)
+DataInput.txt(path = NULL, numBands = 1, IntensityThreshold = T,
+  intMar = 0.97)
 }
 \arguments{
 \item{path}{full path to .txt file.}
 
 \item{numBands}{Number of .txt files to process.}
+
+\item{IntensityThreshold}{Reduces the effect of the cosmic rays by integrating the histogram an thresholding to the intRat integration limit.}
+
+\item{intMar}{Density integration limit.}
 }
 \value{
 a rCRSIObj data object.

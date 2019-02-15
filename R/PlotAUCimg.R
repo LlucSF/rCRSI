@@ -54,12 +54,13 @@ PlotAUCImage <- function(rCRSIObj, intervals, numImg = 1, interpolate = T)
     {
       AUCvec[i] <- flux::auc(x = rCRSIObj$RamanShiftAxis[from:to],
                              y = rCRSIObj$Data[i,from:to]
-      )
+                             )
     }
 
     AUCimg <- matrix(data = AUCvec,
                      nrow = length(rCRSIObj$RelCoords$X),
-                     ncol = length(rCRSIObj$RelCoords$Y))
+                     ncol = length(rCRSIObj$RelCoords$Y)
+                     )
 
 
     #Create the raster
@@ -76,12 +77,14 @@ PlotAUCImage <- function(rCRSIObj, intervals, numImg = 1, interpolate = T)
     raster::plot(x = img,
                  col = sp::bpy.colors(64),
                  useRaster = T,
-                 interpolate = interpolate
+                 interpolate = interpolate,
+                 axes = FALSE,
+                 box = FALSE
                  )
 
     graphics::title(main = paste("AUC: ",signif(rCRSIObj$RamanShiftAxis[from],5),"~",signif(rCRSIObj$RamanShiftAxis[to],5)),
-          sub = paste("Pixel size: ", signif(rCRSIObj$PixelSize[1],3)," x ",signif(rCRSIObj$PixelSize[2],3)),
-          line = 2
-          )
+                    sub = paste("Pixel size: ", signif(rCRSIObj$PixelSize[1],3)," x ",signif(rCRSIObj$PixelSize[2],3)),
+                    line = 2
+                    )
   }
 }

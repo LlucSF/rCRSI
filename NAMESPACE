@@ -6,6 +6,6 @@ import(sp)
 import(flux)
 export(DataInput.txt)
 export(PlotAUCImage)
+export(PlotClusterImage)
 export(PlotScanImage)
 export(SmoothSpectra)
-

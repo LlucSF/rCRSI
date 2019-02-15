@@ -4,11 +4,13 @@
 \alias{SmoothSpectra}
 \title{SmoothSpectra}
 \usage{
-SmoothSpectra(rCRSIObj, NtoZ = TRUE, BackgroundSubs = TRUE,
-  window = 32)
+SmoothSpectra(rCRSIObj, method = "normal", OddfiltLength = 7,
+  NtoZ = TRUE, BackgroundSubs = TRUE, window = 32)
 }
 \arguments{
 \item{rCRSIObj}{a rCRSIObj.}
+
+\item{OddfiltLength}{Integer. Length of the Savitzky-Golay filter.}
 
 \item{NtoZ}{Boolean. Apply negative-to-zero thresholding during the wavelets preprocessing.}
 

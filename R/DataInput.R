@@ -20,6 +20,8 @@
 #'
 #' @param path full path to .txt file.
 #' @param numBands Number of .txt files to process.
+#' @param IntensityThreshold Reduces the effect of the cosmic rays by integrating the histogram an thresholding to the intRat integration limit.
+#' @param intMar Density integration limit.
 #'
 #' @description Reads a .txt file containing Raman data from Reinshaw devices and convert it to an RamanR data object.
 #'
@@ -27,10 +29,9 @@
 #' @export
 #'
 
-DataInput.txt <- function(path = NULL, numBands = 1, IntensityThreshold = T)
+DataInput.txt <- function(path = NULL, numBands = 1, IntensityThreshold = T, intMar = 0.97)
 {
   writeLines("Select files...")
-
   #Data input read
   PathToFile <- list()
   for(i in 1:(numBands))
@@ -86,11 +87,11 @@ DataInput.txt <- function(path = NULL, numBands = 1, IntensityThreshold = T)
     }
   }
 
-  return(rCRMIObj(RamanData, numPixels, numBands, RamanShift, BandLength, Coords, IntensityThreshold))
+  return(rCRMIObj(RamanData, numPixels, numBands, RamanShift, BandLength, Coords, IntensityThreshold, intMar))
 }
 
 
-rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght, Coords, IntensityThreshold)
+rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght, Coords, IntensityThreshold, intMar)
 {
   rCRSIObj <- list()
 
@@ -119,18 +120,34 @@ rCRMIObj <- function(RamanData, numPixels, numBands = 1, RamanShift, BandsLenght
   if(IntensityThreshold)
   {
     dens <- density(rCRSIObj$Data)
+    plot(dens,
+         main = "Full density plot",
+         col = "red",
+         xlab = "Intensity",
+         ylab = "Density"
+         )
+
     aucvec <- vector(length = (length(dens$x)-1))
     for(i in 2:length(dens$x))
     {
       aucvec[i-1] <- flux::auc(x = dens$x[1:i], y = dens$y[1:i])
     }
 
-    intThr <- dens$x[which(aucvec>0.99*max(aucvec))[1]]
+    limit <- max(aucvec) * intMar
+
+    intThr <- dens$x[which(aucvec>limit)[1]]
 
     for(i in 1:rCRSIObj$BandsLength)
     {
       rCRSIObj$Data[which(rCRSIObj$Data[,i]>intThr),i] <- median(rCRSIObj$Data[,i])
     }
+
+    plot(density(rCRSIObj$Data),
+         col = "red",
+         xlab = "Intensity",
+         ylab = "Density",
+         main = paste("Limited density plot","\n","Integration limit: ",intMar)
+         )
   }
 
   writeLines("Data structuring complete...")

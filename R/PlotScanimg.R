@@ -40,7 +40,8 @@ PlotScanImage <- function(rCRSIObj, wavelength, numImg = 1, interpolate = T)
   {
     AUCimg <- matrix(data = rCRSIObj$Data[,which.min(abs(rCRSIObj$RamanShiftAxis-wavelength))],
                      nrow = length(rCRSIObj$RelCoords$X),
-                     ncol = length(rCRSIObj$RelCoords$Y))
+                     ncol = length(rCRSIObj$RelCoords$Y)
+                     )
 
     #Create the raster
     img <- raster::raster(nrows = nrow(AUCimg),
@@ -49,19 +50,21 @@ PlotScanImage <- function(rCRSIObj, wavelength, numImg = 1, interpolate = T)
                           xmx = ncol(AUCimg),
                           ymn = 0,
                           ymx = nrow(AUCimg)
-    )
+                          )
 
     img <- raster::setValues(img,AUCimg)
 
     raster::plot(x = img,
                  col = sp::bpy.colors(64),
                  useRaster = T,
-                 interpolate = interpolate,colNA = "black"
-    )
+                 interpolate = interpolate,
+                 axes = FALSE,
+                 box = FALSE
+                 )
 
     graphics::title(main = paste("Wavelength: ",signif(rCRSIObj$RamanShiftAxis[which.min(abs(rCRSIObj$RamanShiftAxis-wavelength))],7)),
                     sub = paste("Pixel size: ", signif(rCRSIObj$PixelSize[1],3)," x ",signif(rCRSIObj$PixelSize[2],3)),
                     line = 2
-    )
+                    )
   }
 }

@@ -4,7 +4,7 @@
 \alias{PlotAUCImage}
 \title{PlotAUCImage}
 \usage{
-PlotAUCImage(rCRSIObj, intervals, numImg = 1)
+PlotAUCImage(rCRSIObj, intervals, numImg = 1, interpolate = T)
 }
 \arguments{
 \item{rCRSIObj}{A rCRSI object.}
