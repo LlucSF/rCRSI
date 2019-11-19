@@ -60,7 +60,7 @@ SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
         W$W1 <- W$W1-W$W1
         W$W2 <- W$W2-W$W2
         W$W3 <- W$W3-W$W3
-        # W$W4 <- W$W4-W$W4
+        W$W4 <- W$W4-W$W4
         Wav_c@W <- W
 
         rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,]<-wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
@@ -71,18 +71,12 @@ SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
                         rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),],
                         rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),rCRSIObj$BandsLength],times = window))
 
-          Wav_c <- wavelets::modwt(X = spectrum, n.levels=9, filter="d6",
+          Wav_c <- wavelets::modwt(X = spectrum, n.levels=7, filter="d6",
                                    boundary="periodic", fast=TRUE)
           W <- Wav_c@W
-          # W$W1 <- W$W1-W$W1
-          # W$W2 <- W$W2-W$W2
-          # W$W3 <- W$W3-W$W3
-          W$W4 <- W$W4-W$W4
           W$W5 <- W$W5-W$W5
           W$W6 <- W$W6-W$W6
           W$W7 <- W$W7-W$W7
-          W$W8 <- W$W8-W$W8
-          W$W9 <- W$W9-W$W9
           Wav_c@W <- W
 
           V <- Wav_c@V
@@ -93,8 +87,6 @@ SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
           V$V5[,1] <- V$V5[,1]-V$V5[,1]
           V$V6[,1] <- V$V6[,1]-V$V6[,1]
           V$V7[,1] <- V$V7[,1]-V$V7[,1]
-          V$V8[,1] <- V$V8[,1]-V$V8[,1]
-          V$V9[,1] <- V$V9[,1]-V$V9[,1]
           Wav_c@V <- V
 
           rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,] <- wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
