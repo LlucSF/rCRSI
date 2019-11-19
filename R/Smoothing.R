@@ -35,7 +35,6 @@ SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
                           BackgroundSubs = TRUE, window = 32
                           )
 {
-
   if(method!="normal" & method!="wavelets")
   {
     stop("Method must be 'normal' or 'wavelets'")
@@ -43,6 +42,7 @@ SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
 
   writeLines("Starting processing...")
   start_time <- Sys.time()
+  OldrCRSIObj <- rCRSIObj
 
   if(method=="wavelets")
   {
@@ -56,12 +56,12 @@ SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
 
         Wav_c <- wavelets::modwt(X = spectrum, n.levels = 4, filter = "d4",
                                  boundary = "periodic", fast = TRUE)
-        W<-Wav_c@W
-        W$W1<-W$W1-W$W1
-        W$W2<-W$W2-W$W2
-        W$W3<-W$W3-W$W3
-        W$W4<-W$W4-W$W4
-        Wav_c@W<-W
+        W <- Wav_c@W
+        W$W1 <- W$W1-W$W1
+        W$W2 <- W$W2-W$W2
+        W$W3 <- W$W3-W$W3
+        # W$W4 <- W$W4-W$W4
+        Wav_c@W <- W
 
         rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,]<-wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
 
@@ -71,21 +71,31 @@ SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
                         rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),],
                         rep(x = rCRSIObj$Data[(b+((a-1)*rCRSIObj$numPixels)),rCRSIObj$BandsLength],times = window))
 
-          Wav_c <- wavelets::modwt(X = spectrum, n.levels=7, filter="d6",
+          Wav_c <- wavelets::modwt(X = spectrum, n.levels=9, filter="d6",
                                    boundary="periodic", fast=TRUE)
-          W<-Wav_c@W
-          W$W7<-W$W7-W$W7
-          Wav_c@W<-W
-          V<-Wav_c@V
+          W <- Wav_c@W
+          # W$W1 <- W$W1-W$W1
+          # W$W2 <- W$W2-W$W2
+          # W$W3 <- W$W3-W$W3
+          W$W4 <- W$W4-W$W4
+          W$W5 <- W$W5-W$W5
+          W$W6 <- W$W6-W$W6
+          W$W7 <- W$W7-W$W7
+          W$W8 <- W$W8-W$W8
+          W$W9 <- W$W9-W$W9
+          Wav_c@W <- W
 
-          V$V1[,1]<-V$V1[,1]-V$V1[,1]
-          V$V2[,1]<-V$V2[,1]-V$V2[,1]
-          V$V3[,1]<-V$V3[,1]-V$V3[,1]
-          V$V4[,1]<-V$V4[,1]-V$V4[,1]
-          V$V5[,1]<-V$V5[,1]-V$V5[,1]
-          V$V6[,1]<-V$V6[,1]-V$V6[,1]
-          V$V7[,1]<-V$V7[,1]-V$V7[,1]
-          Wav_c@V<-V
+          V <- Wav_c@V
+          V$V1[,1] <- V$V1[,1]-V$V1[,1]
+          V$V2[,1] <- V$V2[,1]-V$V2[,1]
+          V$V3[,1] <- V$V3[,1]-V$V3[,1]
+          V$V4[,1] <- V$V4[,1]-V$V4[,1]
+          V$V5[,1] <- V$V5[,1]-V$V5[,1]
+          V$V6[,1] <- V$V6[,1]-V$V6[,1]
+          V$V7[,1] <- V$V7[,1]-V$V7[,1]
+          V$V8[,1] <- V$V8[,1]-V$V8[,1]
+          V$V9[,1] <- V$V9[,1]-V$V9[,1]
+          Wav_c@V <- V
 
           rCRSIObj$Data[b+(a-1)*rCRSIObj$numPixels,] <- wavelets::imodwt(Wav_c)[(window+1):(window+rCRSIObj$BandsLength)]
         }
@@ -108,10 +118,8 @@ SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
         }
       }
     }
-
-    rCRSIObj$ProAvrgSpectr <- 1
-    rCRSIObj$ProAvrgSpectr <- AverageSpectrum(rCRSIObj$numBands,rCRSIObj$numPixels,rCRSIObj)
   }
+
 
   if(method=="normal")
   {
@@ -119,9 +127,25 @@ SmoothSpectra <- function(rCRSIObj,method = "normal", OddfiltLength = 7,
     {
       rCRSIObj$Data[i,] <- signal::sgolayfilt(x = rCRSIObj$Data[i,],p = 2,n = OddfiltLength)
     }
+  }
 
-    rCRSIObj$ProAvrgSpectr <- 1
-    rCRSIObj$ProAvrgSpectr <- AverageSpectrum(rCRSIObj$numBands,rCRSIObj$numPixels,rCRSIObj)
+  rCRSIObj$ProAvrgSpectr <- AverageSpectrum(rCRSIObj$numBands,rCRSIObj$numPixels,rCRSIObj,F)
+  Old_average <- AverageSpectrum(OldrCRSIObj$numBands, OldrCRSIObj$numPixels, OldrCRSIObj, F)
+
+  for (i in 1:rCRSIObj$numBands)
+  {
+    df <- data.frame(y = c(Old_average[,i]/max(Old_average[,i]),
+                           rCRSIObj$ProAvrgSpectr[,i]/max(rCRSIObj$ProAvrgSpectr[,i])),
+                     x = rep(rCRSIObj$RamanShiftAxis[,i], times = 2),
+                     cl = rep(c("Raw","Processed"), each = length(rCRSIObj$ProAvrgSpectr[,i])))
+
+    g <- ggplot2::ggplot() + ggplot2::theme_bw() +
+      ggplot2::geom_line(mapping = ggplot2::aes(x = df$x, y = df$y, colour = df$cl)) +
+      ggplot2::labs(x ="Raman Shift", y = "Counts") +
+      ggplot2::ggtitle("Data processing normalized results") +
+      ggplot2::labs(colour = "Data") +
+      ggplot2::scale_x_continuous(breaks = trunc(seq(from = min(df$x), to = max(df$x),length.out = 30)),minor_breaks = ggplot2::waiver())
+    print(g)
   }
 
   end_time <- Sys.time()
